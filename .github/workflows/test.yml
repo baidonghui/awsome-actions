@@ -1,0 +1,39 @@
+name: download file and transfer to docker
+
+on:
+  workflow_dispatch:
+    inputs:
+      download-url:
+        description: '下载地址'
+        default: 'https://github.com/Fndroid/clash_for_windows_pkg/releases/download/0.20.9/Clash.for.Windows-0.20.9-win.7z'
+        required: true
+      filename:
+        description: '文件名'
+        default: 'Clash.for.Windows-0.20.9-win.7z'
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin' # https://github.com/actions/setup-java#supported-distributions
+      - name: download
+        run: |
+          git clone https://huggingface.co/llSourcell/doctorGPT_mini
+          mv doctorGPT_mini file
+      - name: Build Image
+        run: |
+          docker build -t registry.cn-zhangjiakou.aliyuncs.com/baidonghui_cr/github-file:1.0.0 .
+      - name: Login to ACR with the AccessKey pair
+        uses: aliyun/acr-login@v1
+        with:
+          region-id: "cn-zhangjiakou"
+          access-key-id: "${{ secrets.ACCESS_KEY_ID }}"
+          access-key-secret: "${{ secrets.ACCESS_KEY_SECRET }}"
+      - name: Push image to ACR
+        run: docker push registry.cn-zhangjiakou.aliyuncs.com/baidonghui_cr/github-file:1.0.0
